@@ -3,7 +3,6 @@
  */
 package fr.whyt.validator;
 
-import fr.whyt.srt.Sub;
 
 
 /**
@@ -16,29 +15,29 @@ public class SRTException extends Exception {
 	
 	private final int line;
 	private final int offset;
-	private final Sub sub;
+	private final String sub;
 	
-	public SRTException(int line, int offset, Sub sub) {
+	public SRTException(int line, int offset, String sub) {
 		this.line 	= line;
 		this.offset = offset;
 		this.sub 	= sub;
 	}
 	
-	public SRTException(String message, int line, int offset, Sub sub) {
+	public SRTException(String message, int line, int offset, String sub) {
 		super(message);
 		this.line 	= line;
 		this.offset = offset;
 		this.sub	= sub;
 	}
 	
-	public SRTException(Throwable throwable, int line, int offset, Sub sub) {
+	public SRTException(Throwable throwable, int line, int offset, String sub) {
 		super(throwable);
 		this.line 	= line;
 		this.offset = offset;
 		this.sub	= sub;
 	}
 	
-	public SRTException(String message, Throwable throwable, int line, int offset, Sub sub) {
+	public SRTException(String message, Throwable throwable, int line, int offset, String sub) {
 		super(message, throwable);
 		this.line 	= line;
 		this.offset = offset;
@@ -53,7 +52,7 @@ public class SRTException extends Exception {
 		return this.offset;
 	}
 	
-	public Sub getSub() {
+	public String getSub() {
 		return this.sub;
 	}
 	
