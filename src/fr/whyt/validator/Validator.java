@@ -3,8 +3,10 @@
  */
 package fr.whyt.validator;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -55,7 +57,17 @@ public class Validator {
 	public static SRTFile validate(String filename) {
 		try {
 		
-			String whole_file = Files.lines(Paths.get(filename)).reduce((s1, s2) -> s1 + s2).get();
+			Path path = Paths.get("srt/test.txt");
+			System.out.println(path.toAbsolutePath());
+			BufferedReader br = Files.newBufferedReader(path);
+			System.out.println(br.read());
+			
+			System.out.println(br.readLine());
+//			Stream<String> stream = Files.lines(path);
+//			stream.forEach(System.out::println);
+//			String whole_file = stream.reduce((s1, s2) -> s1 + s2).get();
+//			stream.close();
+			String whole_file = "";
 			ArrayList<Sub> subs = new ArrayList<Sub>();
 			ArrayList<SRTException> srt_exceptions = new ArrayList<SRTException>();
 			

@@ -16,8 +16,8 @@ public class Main {
 	
 	public static void main(String[] args) {
 		SRTFile srt_file = Validator.validate("srt/test.srt");
-		System.out.println("toString() :\n" + srt_file.toString() + "\n-------------------------------------\n");
-		System.err.println("log:\n" + srt_file.log());
+//		System.out.println("toString() :\n" + srt_file + "\n-------------------------------------\n");
+//		System.err.println("log:\n" + srt_file.log());
 	}
 	
 	
