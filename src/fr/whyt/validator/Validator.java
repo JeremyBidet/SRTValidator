@@ -4,9 +4,11 @@
 package fr.whyt.validator;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -26,78 +28,119 @@ import fr.whyt.srt.Sub;
  */
 public class Validator {
 	
-	private static final String srt_validator = ""
-			// a srt file is composed of
-			+ "(<?srtfile>"
-				// zero or more sub(s) followed by two end-line character
-				+ "(" + Validator.sub_validator + "\n\n)*"
-				// then last sub followed by zero or more end-line character
-				+ "(" + Validator.sub_validator + "\n*)"
-			+ ")";
-	
+	private static final String sub_number_validator 	= "\\d+";
+	private static final String time_validator 			= "\\d{2}:\\d{2}:\\d{2},\\d{3}";
+	private static final String times_validator			= "(<?starttime>" + Validator.time_validator + ") --> (<?endtime>" + Validator.time_validator + ")";
+	private static final String sub_string_validator 	= "[^\n]+";
+	private static final String sub_strings_validator 	= "((<?substring>" + Validator.sub_string_validator + ")\n)+";
 	private static final String sub_validator = ""
-		// a sub is composed of
-		+ "(<?sub>"
-			// a sub number followed by one end-line character
-			+ "(<?subnumber>\\d)" + "\n"
-			// a start time formatted as HH:mm:ss,SSS followed by a space, a "-->", an another space, an end time formatted as HH:mm:ss,SSS and one end-line character
-			+ "(<?starttime>(<?starttimeh>\\d{2}):(<?starttimem>\\d{2}):(<?starttimes>\\d{2}),(<?starttimems>\\d{3}))"
-			+ " --> "
-			+ "(<?endtime>(<?endtimeh>\\d{2}):(<?endtimem>\\d{2}):(<?endtimes>\\d{2}),(<?endtimems>\\d{3}))" + "\n"
-			// one or more string separated by one end-line character
-			+ "(<?substring>([^\n]+\n)+)"
-		+ ")";
+			+ "(<?subnumber>" + Validator.sub_number_validator + ")\n"
+			+ "(?<times>" + Validator.times_validator + ")\n"
+			+ "(<?substrings>" + Validator.sub_strings_validator + ")";
+	private static final String srt_validator = "(<?sub>" + Validator.sub_validator + "\n*)+";
+
+	private static final Pattern sub_number_pattern		= Pattern.compile(Validator.sub_number_validator);
+	private static final Pattern time_pattern			= Pattern.compile(Validator.time_validator);
+	private static final Pattern times_pattern			= Pattern.compile(Validator.times_validator);
+	private static final Pattern sub_string_pattern		= Pattern.compile(Validator.sub_string_validator);
+	private static final Pattern sub_strings_pattern	= Pattern.compile(sub_strings_validator);
+	private static final Pattern sub_pattern 			= Pattern.compile(Validator.sub_validator);
+	private static final Pattern srt_pattern 			= Pattern.compile(Validator.srt_validator);
 	
 	private static final DateTimeFormatter dtf = Sub.dtf;
 	
-	private static final Pattern srt_pattern = Pattern.compile(srt_validator);
-	private static final Pattern sub_pattern = Pattern.compile(sub_validator);
+	private static final Charset srt_charset = Charset.forName("ISO-8859-1");
 	
-	
-	public static SRTFile validate(String filename) {
+	/**
+	 * Validate a SRT file !<br>Does not return errors or SRT file wrapper.
+	 * @param filepath the file path of the SRT file.
+	 * @return true if, and only if, the SRT file match the SRT pattern.
+	 */
+	public static boolean validate(String filepath) {
 		try {
-		
-			Path path = Paths.get("srt/test.txt");
-			System.out.println(path.toAbsolutePath());
-			BufferedReader br = Files.newBufferedReader(path);
-			System.out.println(br.read());
 			
-			System.out.println(br.readLine());
-//			Stream<String> stream = Files.lines(path);
-//			stream.forEach(System.out::println);
-//			String whole_file = stream.reduce((s1, s2) -> s1 + s2).get();
-//			stream.close();
-			String whole_file = "";
+			String whole_file = Files.lines(Paths.get("srt/test.srt"), Validator.srt_charset)
+					.reduce((s1, s2) -> s1 + s2)
+					.get();
+			
+			Matcher srt_matcher = srt_pattern.matcher(whole_file);
+			
+			return srt_matcher.matches();
+			
+		} catch ( IOException e ) {
+			e.printStackTrace();
+			return false;
+		}	
+	}
+	
+	/**
+	 * 
+	 * @param filepath
+	 * @return
+	 */
+	public static SRTFile detectError(String filepath) {
+		try {
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), Validator.srt_charset));
+			
 			ArrayList<Sub> subs = new ArrayList<Sub>();
 			ArrayList<SRTException> srt_exceptions = new ArrayList<SRTException>();
 			
-			Matcher srt_matcher = srt_pattern.matcher(whole_file);
-			Matcher sub_matcher = sub_pattern.matcher(whole_file);
+			StringBuilder sb_sub = new StringBuilder();
+			StringBuilder sub_strings = new StringBuilder();
+			String line = new String();
+			int line_no = 1;
 			
-			if(srt_matcher.matches()) {
-				int check_number = 0;
-				int line = 0;
-				while( sub_matcher.find() ) {
-					/** getting parsed sub **/
-					int number = Integer.parseInt(sub_matcher.group("subnumber"));
-					LocalTime lt_start_time = null;
-					String start_time = sub_matcher.group("starttime");
-					LocalTime lt_end_time = null;
-					String end_time = sub_matcher.group("endtime");
-					String sub_string = sub_matcher.group("substring");
-					
-					/** updating line position **/
-					int tmp_line = line;
-					//     last + number+time + sub string count                + last end-line
-					line = line + 2           + sub_string.split("\n").length-1 + 1;
-					
-					/** validating parsed sub **/
-					boolean error = false;
-					String sub = sub_matcher.group("sub");
-					if( number != check_number++ ) {
-						srt_exceptions.add(new SRTException("", tmp_line, 0, sub));
-						error = true;
+			while( (line = br.readLine()) != null ) {
+				int start_line_no = line_no;
+				String sub_number_line = line;
+				String times_line = (line = br.readLine());
+				sub_strings.delete(0, sub_strings.length());
+				while( (line = br.readLine()).equals("") == false ) {
+					sub_strings.append(line).append('\n');
+					line_no++;
+				}
+				String sub_strings_lines = sub_strings.toString();
+				line_no++;
+				line_no++;
+				
+				sb_sub.delete(0, sb_sub.length());
+				sb_sub.append(sub_number_line).append('\n');
+				sb_sub.append(times_line).append('\n');
+				sb_sub.append(sub_strings_lines);
+				String sub = sb_sub.toString();
+				
+				Matcher sub_number_matcher 	= sub_number_pattern.matcher(sub_number_line);
+				Matcher times_matcher		= times_pattern.matcher(times_line);
+				Matcher sub_strings_matcher = sub_strings_pattern.matcher(sub_strings_lines);
+				
+				/** if any error, sub is not added to sub list. **/
+				boolean valide = true;
+				
+				/** validate sub number **/
+				int sub_number = -1;
+				if( sub_number_matcher.matches() ) {
+					sub_number = Integer.parseInt(sub_number_matcher.group("subnumber"));
+					if( sub_number != subs.size() ) {
+						srt_exceptions.add(new SRTException(
+								"Sub number does not match ! Expected: " + subs.size() + ", actual: " + sub_number,
+								start_line_no, 0, sub
+						));
+						valide = false;
 					}
+				} else {
+					srt_exceptions.add(new SRTException(
+							"Invalid sub number format ! Expected number, actual " + sub_number_line,
+							start_line_no, 0, sub)
+					);
+					valide = false;
+				}
+				
+				/** validate times (start time and end time, with arrow sign) **/
+				LocalTime lt_start_time = null;
+				LocalTime lt_end_time = null;
+				if( times_matcher.matches() ) {
+					String start_time = times_matcher.group("starttime");
+					String end_time = times_matcher.group("endtime");
 					try {
 						lt_start_time = LocalTime.parse(start_time, dtf);
 						lt_end_time = LocalTime.parse(end_time, dtf);
@@ -117,25 +160,68 @@ public class Validator {
 						} else {
 							offset = dtpe.getErrorIndex();
 						}
-						srt_exceptions.add(new SRTException(dtpe.getCause().getMessage(), tmp_line+1, offset, sub));
-						error = true;
+						srt_exceptions.add(new SRTException(
+								dtpe.getCause().getMessage(),
+								start_line_no+1, offset, sub
+						));
+						valide = false;
 					}
-					if(sub_string.length() <= 0) {
-						srt_exceptions.add(new SRTException("There are no subtitles here !", tmp_line+2, 0, sub));
-						error = true;
+				} else {
+					String[] times_strings = times_line.split(" --> ");
+					if(times_strings.length != 2) {
+						srt_exceptions.add(new SRTException(
+								"Start time and end time should be separated by a \" --> \" sign !",
+								start_line_no+1,
+								12,
+								sub
+						));
+					} else {
+						Matcher start_time_matcher = time_pattern.matcher(times_strings[0]);
+						if( start_time_matcher.matches() == false ) {
+							srt_exceptions.add(new SRTException(
+									"The start time string does not match the pattern ! Expected: hh:mm:ss,ttt, actual: " + times_strings[0] + "\n"
+										+ "\twith 'h' as hour, 'm' as minute, 's' as second, 't' as millisecond.",
+									start_line_no+1, 0, sub
+							));
+						}
+						Matcher end_time_matcher = time_pattern.matcher(times_strings[1]);
+						if( end_time_matcher.matches() == false ) {
+							srt_exceptions.add(new SRTException(
+									"The end time string does not match the pattern ! Expected: hh:mm:ss,ttt, actual: " + times_strings[0] + "\n"
+										+ "\twith 'h' as hour, 'm' as minute, 's' as second, 't' as millisecond.",
+									start_line_no+1, 17, sub
+							));
+						}
 					}
-					
-					/** add sub if no error **/
-					if( !error ) {
-						subs.add(new Sub(number, tmp_line, lt_start_time, lt_end_time, sub_string));
-					}
+					valide = false;
 				}
+				
+				/** validate substrings **/
+				if( sub_strings_matcher.matches() == false ) {
+					srt_exceptions.add(new SRTException(
+							"There are no subtitles here !",
+							start_line_no+2, 0, sub
+					));
+					valide = false;
+				}
+				
+				Matcher sub_matcher = sub_pattern.matcher(sub);
+				/** add sub if no error **/
+				if( valide && sub_matcher.matches() ) {
+					subs.add(new Sub(sub_number, start_line_no, lt_start_time, lt_end_time, sub_strings_lines));
+				}
+				
+				/** read the last \n of the sub **/
+				line = br.readLine();
+				line_no++;
 			}
 			
-			return new SRTFile(Paths.get(filename).toFile(), subs, srt_exceptions);
+			br.close();
+			
+			return new SRTFile(Paths.get(filepath).toFile(), subs, srt_exceptions);
 		
 		} catch ( IOException e ) {
-			System.err.println("This file does not exists ! " + filename);
+			System.err.println("This file does not exists ! " + filepath);
 		}
 		
 		return null;
