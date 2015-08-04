@@ -5,6 +5,7 @@ package fr.whyt.srt;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 
 /**
@@ -12,42 +13,42 @@ import java.time.format.DateTimeFormatter;
  *
  */
 public class Sub {
+
+	private int start_line;
 	
 	private int number;
-	private int start_line;
 	private LocalTime start_time;
 	private LocalTime end_time;
-	private String sub_string;
+	private ArrayList<String> sub_strings;
 	
 	public static final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss,SSS");
 	
 	
-	public Sub(int number, int start_line, LocalTime start_time, LocalTime end_time, String sub_string) {
-		this.number		= number;
+	public Sub(int start_line, int number, LocalTime start_time, LocalTime end_time, ArrayList<String> sub_strings) {
 		this.start_line = start_line;
+		
+		this.number 	= number;
 		this.start_time = start_time;
 		this.end_time 	= end_time;
-		this.sub_string = sub_string;
+		this.sub_strings = sub_strings;
 	}
 	
-	public Sub(int number, int start_line, String start_time, String end_time, String sub_string) {
-		this.number		= number;
+	public Sub(int start_line, int number, String start_time, String end_time, ArrayList<String> sub_strings) {
 		this.start_line = start_line;
 		
-		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss,SSS");
-		this.start_time = LocalTime.parse(start_time, dtf);
-		this.end_time 	= LocalTime.parse(end_time, dtf);
-		
-		this.sub_string = sub_string;
+		this.number		= number;
+		this.start_time = LocalTime.parse(start_time, Sub.dtf);
+		this.end_time 	= LocalTime.parse(end_time, Sub.dtf);
+		this.sub_strings = sub_strings;
 	}
 
 	
-	public int getNumber() {
-		return this.number;
-	}
-	
 	public int getStartLine() {
 		return this.start_line;
+	}
+	
+	public int getNumber() {
+		return this.number;
 	}
 	
 	public LocalTime getStartTime() {
@@ -58,17 +59,21 @@ public class Sub {
 		return this.end_time;
 	}
 	
-	public String getSubString() {
-		return this.sub_string;
+	public ArrayList<String> getSubStrings() {
+		return this.sub_strings;
+	}
+	
+	public String getFormattedSubStrings() {
+		return this.sub_strings.stream().reduce((s1, s2) -> s1 + '\n' + s2).get();
 	}
 	
 	
 	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof Sub
-				&& ((Sub) obj).number == this.number
 				&& ((Sub) obj).start_line == this.start_line
-				&& ((Sub) obj).sub_string.equals(this.sub_string)
+				&& ((Sub) obj).number == this.number
+				&& ((Sub) obj).sub_strings.equals(this.sub_strings)
 				&& ((Sub) obj).start_time.equals(this.start_time)
 				&& ((Sub) obj).end_time.equals(this.end_time);
 	}
@@ -77,7 +82,7 @@ public class Sub {
 	public String toString() {
 		return this.number + "\n"
 				+ this.start_time.format(Sub.dtf) + " --> " + this.end_time.format(Sub.dtf) + "\n"
-				+ this.sub_string;
+				+ this.getFormattedSubStrings();
 	}
 	
 }
