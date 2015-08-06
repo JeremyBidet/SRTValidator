@@ -58,9 +58,9 @@ public class RawSRTFile {
 	
 	public String toFormattedString() {
 		return this.subs.stream()
-				.map(s -> s.toString())
-				.reduce((s1, s2) -> s1 + '\n' + s2)
-				.get();
+				.map(s -> s.getSub())
+				.reduce((s1, s2) -> s1 + "\n\n" + s2)
+				.get() + '\n';
 	}
 	
 }

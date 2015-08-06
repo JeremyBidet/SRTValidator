@@ -33,7 +33,7 @@ public class Validator {
 			+ "(?<times>" + Validator.times_validator + ")\n"
 			+ "(?<substrings>" + Validator.sub_strings_validator + ")";
 	private static final String srt_validator = ""
-			+ "(?<sub>" + Validator.sub_validator + "\n*)+";
+			+ "((?<sub>" + Validator.sub_validator + ")\n*)+";
 
 	private static final Pattern sub_number_pattern		= Pattern.compile(Validator.sub_number_validator);
 	private static final Pattern time_pattern			= Pattern.compile(Validator.time_validator);
@@ -54,12 +54,7 @@ public class Validator {
 	 * @return a SRT error log, empty if no errors.
 	 */
 	public static SRTErrorLog validate(RawSRTFile raw_srt_file) {
-		Matcher srt_matcher = srt_pattern.matcher(raw_srt_file.toFormattedString());
-		if(srt_matcher.matches()) {
-			return new SRTErrorLog();
-		} else {
-			return checkError(raw_srt_file);
-		}
+		return checkError(raw_srt_file);
 	}
 	
 	/**
@@ -67,25 +62,24 @@ public class Validator {
 	 * @param raw_srt_file the SRT file as it (in raw format).
 	 * @return a SRT error log with all errors contained in the SRT file.
 	 */
-	public static SRTErrorLog checkError(RawSRTFile raw_srt_file) {
+	private static SRTErrorLog checkError(RawSRTFile raw_srt_file) {
 		ArrayList<SRTException> errors = new ArrayList<SRTException>();
 		
 		int i = 0;
 		for(RawSub raw_sub : raw_srt_file.getSubs()) {
 			/** validate sub number **/
 			Matcher sub_number_matcher = sub_number_pattern.matcher(raw_sub.getNumber());
-			int sub_number = -1;
 			if( sub_number_matcher.matches() ) {
-				sub_number = Integer.parseInt(sub_number_matcher.group());
+				int sub_number = Integer.parseInt(sub_number_matcher.group());
 				if( sub_number != i ) {
 					errors.add(new SRTException(
-							"Sub number does not match ! Expected: " + i + ", actual: " + sub_number,
-							raw_sub.getStartLine(), 0, raw_sub.getSub()));
+							"Sub number does not match ! Expected: " + i + ", actual: \"" + sub_number + "\"",
+							raw_sub.getStartLine(), 0, raw_sub.toString()));
 				}
 			} else {
 				errors.add(new SRTException(
-						"Invalid sub number format ! Expected number, actual " + sub_number,
-						raw_sub.getStartLine(), 0, raw_sub.getSub()));
+						"Invalid sub number format ! Expected number, actual: \"" + raw_sub.getNumber() + "\"",
+						raw_sub.getStartLine(), 0, raw_sub.toString()));
 			}
 			/** validate times (start time and end time, with arrow sign) **/
 			Matcher times_matcher = times_pattern.matcher(raw_sub.getTimer());
@@ -115,48 +109,49 @@ public class Validator {
 					}
 					errors.add(new SRTException(
 							dtpe.getCause().getMessage(),
-							raw_sub.getStartLine()+1, offset, raw_sub.getSub()));
+							raw_sub.getStartLine()+1, offset, raw_sub.toString()));
 				}
 			} else {
 				Matcher time_matcher 	= Validator.time_pattern.matcher(raw_sub.getTimer());
 				Matcher arrow_matcher	= Validator.arrow_pattern.matcher(raw_sub.getTimer());
 				int last_end = 0;
 				time_matcher.reset();
-				time_matcher.region(0, 12);
+				time_matcher.region(time_matcher.regionStart(), time_matcher.regionStart()+12);
 				if( !time_matcher.find() ) {
 					errors.add(new SRTException(
-							"The start time string does not match the pattern ! Expected: hh:mm:ss,ttt, actual: " + raw_sub.getTimer() + "\n"
-									+ "\twith 'h' as hour, 'm' as minute, 's' as second, 't' as millisecond.",
-							raw_sub.getStartLine()+1, 0, raw_sub.getSub()));
+							"The start time string does not match the pattern ! Expected: hh:mm:ss,ttt, actual: \"" + raw_sub.getTimer() + "\"\n"
+									+ "with 'h' as hour, 'm' as minute, 's' as second, 't' as millisecond.",
+							raw_sub.getStartLine()+1, 0, raw_sub.toString()));
 				}
 				arrow_matcher.reset();
-				arrow_matcher.region(last_end, last_end+5);
 				if( !arrow_matcher.find() ) {
 					errors.add(new SRTException(
 							"Start time and end time should be separated by a \" --> \" sign !",
-							raw_sub.getStartLine()+1, 12, raw_sub.getSub()));
+							raw_sub.getStartLine()+1, 12, raw_sub.toString()));
+				} else {
+					last_end = arrow_matcher.end();
 				}
 				time_matcher.reset();
-				time_matcher.region(last_end, time_matcher.regionEnd());
+				time_matcher.region(time_matcher.regionEnd()-12, time_matcher.regionEnd());
 				if( !time_matcher.find() ) {
 					errors.add(new SRTException(
-							"The end time string does not match the pattern ! Expected: hh:mm:ss,ttt, actual: " + raw_sub.getTimer() + "\n"
-								+ "\twith 'h' as hour, 'm' as minute, 's' as second, 't' as millisecond.",
-							raw_sub.getStartLine()+1, time_matcher.regionStart(), raw_sub.getSub()));
+							"The end time string does not match the pattern ! Expected: hh:mm:ss,ttt, actual: \"" + raw_sub.getTimer() + "\"\n"
+								+ "with 'h' as hour, 'm' as minute, 's' as second, 't' as millisecond.",
+							raw_sub.getStartLine()+1, time_matcher.regionStart(), raw_sub.toString()));
 				}
 			}
 			/** validate substrings **/
 			Matcher sub_strings_matcher = sub_strings_pattern.matcher(raw_sub.getFormattedSubStrings());
 			if( ! sub_strings_matcher.matches() ) {
 				errors.add(new SRTException(
-						"There are no subtitles here !",
-						raw_sub.getStartLine()+2, 0, raw_sub.getSub()));
+						"There are no subtitles in this sub !",
+						raw_sub.getStartLine()+2, 0, raw_sub.toString()));
 			}
 			/** next sub **/
 			i++;
 		}
 		
-		return new SRTErrorLog(errors);
+		return new SRTErrorLog(raw_srt_file.getFile(), errors);
 	}
 	
 }

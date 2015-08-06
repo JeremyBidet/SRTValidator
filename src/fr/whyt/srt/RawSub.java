@@ -51,7 +51,7 @@ public class RawSub {
 	}
 	
 	public String getFormattedSubStrings() {
-		return this.sub_strings.stream().reduce((s1,  s2) -> s1 + '\n' + s2).get();
+		return this.sub_strings.stream().reduce((s1,  s2) -> s1 + '\n' + s2).get() + '\n';
 	}
 	
 	public String getSub() {
@@ -71,7 +71,17 @@ public class RawSub {
 	
 	@Override
 	public String toString() {
-		return this.sub;
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(this.start_line)		.append('|').append(this.number).append('\n');
+		sb.append((this.start_line+1))	.append('|').append(this.timer)	.append('\n');
+		
+		int subs_line = this.start_line+2;
+		for(String sub : this.sub_strings) {
+			sb.append(subs_line++).append('|').append(sub).append('\n');
+		}
+		
+		return sb.toString();
 	}
 	
 }
