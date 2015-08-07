@@ -3,10 +3,12 @@
  */
 package fr.whyt.main;
 
-import fr.whyt.srt.RawSRTFile;
-import fr.whyt.srt.SRT;
-import fr.whyt.validator.SRTErrorLog;
-import fr.whyt.validator.Validator;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
+import fr.whyt.synchronize.Synchronizer;
+import fr.whyt.synchronize.Synchronizer.Sign;
 
 
 /**
@@ -22,9 +24,17 @@ public class Main {
 //		SRTFile srt_file = Validator.detectError("srt/test.srt");
 //		System.out.println("toString() :\n" + srt_file + "\n-------------------------------------\n");
 //		System.err.println("log:\n" + srt_file.log());
-		RawSRTFile rsf = SRT.deserialize("srt/test.srt");
-		SRTErrorLog sel = Validator.validate(rsf);
-		sel.log();
+//		RawSRTFile rsf = SRT.deserialize("srt/test.srt");
+//		SRTErrorLog sel = Validator.validate(rsf);
+//		sel.log();
+		
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss,SSS");
+		LocalTime lt = LocalTime.parse("12:31:45,345", dtf);
+		System.out.println("lt:"+lt);
+		Duration duration = Synchronizer.create(Sign.MINUS, 0, 1, 2, 112);
+		System.out.println("duration:"+duration);
+		lt = lt.plus(duration);
+		System.out.println("lt:"+lt);
 		
 	}
 	

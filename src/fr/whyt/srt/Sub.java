@@ -67,6 +67,13 @@ public class Sub {
 		return this.sub_strings.stream().reduce((s1, s2) -> s1 + '\n' + s2).get();
 	}
 	
+	public void setStartTime(LocalTime start_time) {
+		this.start_time = start_time;
+	}
+	
+	public void setEndTime(LocalTime end_time) {
+		this.end_time = end_time;
+	}
 	
 	@Override
 	public boolean equals(Object obj) {

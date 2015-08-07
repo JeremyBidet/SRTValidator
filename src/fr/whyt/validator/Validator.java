@@ -114,7 +114,7 @@ public class Validator {
 			} else {
 				Matcher time_matcher 	= Validator.time_pattern.matcher(raw_sub.getTimer());
 				Matcher arrow_matcher	= Validator.arrow_pattern.matcher(raw_sub.getTimer());
-				int last_end = 0;
+
 				time_matcher.reset();
 				time_matcher.region(time_matcher.regionStart(), time_matcher.regionStart()+12);
 				if( !time_matcher.find() ) {
@@ -128,8 +128,6 @@ public class Validator {
 					errors.add(new SRTException(
 							"Start time and end time should be separated by a \" --> \" sign !",
 							raw_sub.getStartLine()+1, 12, raw_sub.toString()));
-				} else {
-					last_end = arrow_matcher.end();
 				}
 				time_matcher.reset();
 				time_matcher.region(time_matcher.regionEnd()-12, time_matcher.regionEnd());
