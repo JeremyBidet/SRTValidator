@@ -50,7 +50,21 @@ public class SRTErrorLog {
 		try {
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(log), SRT.charset));
 			
-			bw.write(this.toString());
+			StringBuilder sb = new StringBuilder();
+			/** create errors list **/
+			for(int i=0; i<this.errors.size(); i++) {
+				sb	.append('#')
+					.append(i)
+					.append('\n')
+					.append(this.errors.get(i).toString())
+					.append('\n');
+			}
+			/** create footer **/
+			sb.append("#####################\n");
+			sb.append(this.errors.size() + " error" + (this.errors.size()>1?'s':"") + " founded !").append('\n');
+			
+			/** write to file **/
+			bw.write(sb.toString());
 			
 			bw.close();
 		} catch ( FileNotFoundException e ) {
