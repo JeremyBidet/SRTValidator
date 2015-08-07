@@ -7,8 +7,8 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-import fr.whyt.synchronize.Synchronizer;
-import fr.whyt.synchronize.Synchronizer.Sign;
+import fr.whyt.synchronizer.Synchronizer;
+import fr.whyt.synchronizer.Synchronizer.Sign;
 
 
 /**

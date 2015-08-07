@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fr.whyt.synchronize;
+package fr.whyt.synchronizer;
 
 import java.time.Duration;
 
