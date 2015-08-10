@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fr.whyt.srt;
+package fr.whyt.core.srt;
 
 import java.io.File;
 import java.util.ArrayList;

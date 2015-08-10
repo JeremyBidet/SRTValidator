@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fr.whyt.validator;
+package fr.whyt.core.validator;
 
 
 

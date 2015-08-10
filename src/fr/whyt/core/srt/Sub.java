@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fr.whyt.srt;
+package fr.whyt.core.srt;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;

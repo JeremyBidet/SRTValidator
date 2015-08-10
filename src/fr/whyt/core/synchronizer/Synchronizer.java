@@ -1,12 +1,12 @@
 /**
  * 
  */
-package fr.whyt.synchronizer;
+package fr.whyt.core.synchronizer;
 
 import java.time.Duration;
 
-import fr.whyt.srt.SRTFile;
-import fr.whyt.srt.Sub;
+import fr.whyt.core.srt.SRTFile;
+import fr.whyt.core.srt.Sub;
 
 
 /**

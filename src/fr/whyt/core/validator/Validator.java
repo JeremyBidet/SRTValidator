@@ -1,7 +1,7 @@
 /**
  * 
  */
-package fr.whyt.validator;
+package fr.whyt.core.validator;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import fr.whyt.srt.RawSRTFile;
-import fr.whyt.srt.RawSub;
-import fr.whyt.srt.Sub;
+import fr.whyt.core.srt.RawSRTFile;
+import fr.whyt.core.srt.RawSub;
+import fr.whyt.core.srt.Sub;
 
 
 
@@ -28,21 +28,21 @@ public class Validator {
 	private static final String times_validator			= "(?<starttime>" + Validator.time_validator + ") --> (?<endtime>" + Validator.time_validator + ")";
 	private static final String sub_string_validator 	= "[^\n]+";
 	private static final String sub_strings_validator 	= "((?<substring>" + Validator.sub_string_validator + ")\n)+";
-	private static final String sub_validator = ""
-			+ "(?<subnumber>" + Validator.sub_number_validator + ")\n"
-			+ "(?<times>" + Validator.times_validator + ")\n"
-			+ "(?<substrings>" + Validator.sub_strings_validator + ")";
-	private static final String srt_validator = ""
-			+ "((?<sub>" + Validator.sub_validator + ")\n*)+";
+//	private static final String sub_validator = ""
+//			+ "(?<subnumber>" + Validator.sub_number_validator + ")\n"
+//			+ "(?<times>" + Validator.times_validator + ")\n"
+//			+ "(?<substrings>" + Validator.sub_strings_validator + ")";
+//	private static final String srt_validator = ""
+//			+ "((?<sub>" + Validator.sub_validator + ")\n*)+";
 
 	private static final Pattern sub_number_pattern		= Pattern.compile(Validator.sub_number_validator);
 	private static final Pattern time_pattern			= Pattern.compile(Validator.time_validator);
 	private static final Pattern arrow_pattern			= Pattern.compile(Validator.arrow_validator);
 	private static final Pattern times_pattern			= Pattern.compile(Validator.times_validator);
-	private static final Pattern sub_string_pattern		= Pattern.compile(Validator.sub_string_validator);
+//	private static final Pattern sub_string_pattern		= Pattern.compile(Validator.sub_string_validator);
 	private static final Pattern sub_strings_pattern	= Pattern.compile(Validator.sub_strings_validator);
-	private static final Pattern sub_pattern 			= Pattern.compile(Validator.sub_validator);
-	private static final Pattern srt_pattern 			= Pattern.compile(Validator.srt_validator);
+//	private static final Pattern sub_pattern 			= Pattern.compile(Validator.sub_validator);
+//	private static final Pattern srt_pattern 			= Pattern.compile(Validator.srt_validator);
 	
 	private static final DateTimeFormatter dtf = Sub.dtf;
 	
